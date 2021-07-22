@@ -23,7 +23,10 @@ export async function addItemsToAllLinks(items: ImportItem[]) {
         JSON.stringify(allLinks.concat(notImported), null, 4)
     );
 
-    console.log("items added to import list: ", notImported.length);
+    console.log(
+        "items added to import list: ",
+        `${notImported.length}/${items.length}`
+    );
 }
 
 export async function addItemsToAlreadyImportedLinks(items: ImportItem[]) {
@@ -38,5 +41,8 @@ export async function addItemsToAlreadyImportedLinks(items: ImportItem[]) {
         JSON.stringify(alreadyImported.concat(notIncluded), null, 4)
     );
 
-    console.log("items added to already imported: ", notIncluded.length);
+    console.log(
+        "items added to already imported: ",
+        `${notIncluded.length}/${items.length}`
+    );
 }
