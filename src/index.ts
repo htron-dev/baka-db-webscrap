@@ -1,27 +1,28 @@
-import {
-    getItemsFromMALPage,
-    getMALItemPageAsObject,
-} from "./fetch-mal-items-pages";
-import { addItemsToAllLinks } from "./update-json-files";
-import { createFile } from "./create-item";
+import express from "express";
+import { createBullBoard } from "@bull-board/api";
+import { BullAdapter } from "@bull-board/api/bullAdapter";
+import { ExpressAdapter } from "@bull-board/express";
 
-// fetch all animes in a page
-async function main() {
-    // const items = await getItemsFromMALPage(
-    //     "https://myanimelist.net/anime.php?letter=."
-    // );
+import createFileQueue from "./queue-create-file";
 
-    // await addItems(items);
+const serverAdapter = new ExpressAdapter();
 
-    await createFile({
-        name: ".hack//G.U. Returner",
-        link: "https://myanimelist.net/anime/2928/hack__GU_Returner",
-    });
-}
+createBullBoard({
+    queues: [new BullAdapter(createFileQueue)],
+    serverAdapter,
+});
 
-main()
-    .then(() => process.exit())
-    .catch((err) => {
-        console.error(err);
-        process.exit(1);
-    });
+const app = express();
+
+app.get("/", (req, res) =>
+    res.json({
+        hello: "word",
+        queuesLink: "http://localhost:${3333}/queues",
+    })
+);
+
+serverAdapter.setBasePath("/queues");
+
+app.use("/queues", serverAdapter.getRouter());
+
+app.listen(3333, () => console.log(`server ready: http://localhost:${3333}`));

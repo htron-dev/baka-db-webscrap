@@ -28,9 +28,11 @@ export async function getMALItemPageAsObject(link: string) {
     const page = await browser.newPage();
     const anime: any = {};
 
-    await page.goto(link);
+    await page.goto(link, {
+        timeout: 60 * 1000,
+    });
 
-    const relatedProjectLinks = await page.$$eval(
+    anime["related"] = await page.$$eval(
         ".anime_detail_related_anime a",
         (all) => {
             return all.map((el) => ({
@@ -40,12 +42,56 @@ export async function getMALItemPageAsObject(link: string) {
         }
     );
 
-    const elements: any[] = await page.$$eval("table td div", (el) => {
-        const sidebar = el[0];
+    anime["sinopse"] = await page.$eval("[itemprop=description]", (el) => {
+        return el.textContent;
+    });
+
+    anime["opening_song"] = await page.$eval(".theme-songs.opnening", (el) => {
+        const name = el.querySelector(".theme-song");
+        return name ? name.textContent : null;
+    });
+
+    anime["ending_song"] = await page.$eval(".theme-songs.ending", (el) => {
+        const name = el.querySelector(".theme-song");
+        return name ? name.textContent : null;
+    });
+
+    anime["characters"] = await page.$eval(".detail-characters-list", (el) => {
+        return Array.from(el.querySelectorAll("tr"))
+            .map((tr) => {
+                const character = tr.querySelector("h3");
+                const actor = tr.querySelector(".va-t a");
+                return {
+                    name: character ? character.textContent : character,
+                    voice_actor: actor ? actor.textContent : actor,
+                };
+            })
+            .filter((i) => !!i.name);
+    });
+
+    anime["staff"] = await page.$$eval(".detail-characters-list", (all) => {
+        const el = all[1];
+
+        if (!el) {
+            return [];
+        }
+
+        return Array.from(el.querySelectorAll("tr"))
+            .map((tr) => {
+                const person = tr.querySelector("a:not(.fw-n)");
+                const role = tr.querySelector("small");
+                return {
+                    name: person ? person.textContent : person,
+                    role: role ? role.textContent : role,
+                };
+            })
+            .filter((i) => !!i.name);
+    });
+
+    const elements: any[] = await page.$eval("table td div", (sidebar) => {
+        const results: any = [];
 
         const externalLinks = sidebar.querySelectorAll(".pb16 a");
-
-        const results: any = [];
 
         results.push({
             tagName: "DIV",
@@ -78,6 +124,7 @@ export async function getMALItemPageAsObject(link: string) {
         "duration",
         "rating",
         "links",
+        "synonyms",
     ];
 
     elements.forEach((el) => {
@@ -101,8 +148,6 @@ export async function getMALItemPageAsObject(link: string) {
             anime[key] = value.replace(/^\s+|\s+$/g, "").replace(/\n/g, "");
         }
     });
-
-    anime["related"] = relatedProjectLinks;
 
     await browser.close();
 

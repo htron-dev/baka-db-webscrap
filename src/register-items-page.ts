@@ -2,7 +2,7 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 
-import { getItemsFromMALPage } from "./fetch-mal-items-pages";
+import { getItemsFromMALPage } from "./fetch-mal";
 import { addItemsToAllLinks } from "./update-json-files";
 
 // fetch all animes in a page

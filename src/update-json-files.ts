@@ -2,21 +2,25 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 
-import alreadyImported from "../imported.json";
-import allLinks from "../all-links.json";
-
 export interface ImportItem {
     link: string;
     name: string;
+}
+async function getJson<T = {}>(filename: string): Promise<T> {
+    const content = await promisify(fs.readFile)(filename, "utf-8");
+
+    return JSON.parse(content);
 }
 
 // fetch all animes in a page
 export async function addItemsToAllLinks(items: ImportItem[]) {
     const allLinksPath = path.resolve(__dirname, "..", "all-links.json");
 
-    const notImported = items
-        .filter((i) => !alreadyImported.includes(i.link))
-        .filter((i) => !allLinks.some((al) => al.link === i.link));
+    const allLinks = await getJson<ImportItem[]>(allLinksPath);
+
+    const notImported = items.filter(
+        (i) => !allLinks.some((al) => al.link === i.link)
+    );
 
     await promisify(fs.writeFile)(
         allLinksPath,
@@ -30,19 +34,25 @@ export async function addItemsToAllLinks(items: ImportItem[]) {
 }
 
 export async function addItemsToAlreadyImportedLinks(items: ImportItem[]) {
-    const filePath = path.resolve(__dirname, "..", "imported.json");
+    const allLinksPath = path.resolve(__dirname, "..", "all-links.json");
+
+    const importedLinksPath = path.resolve(__dirname, "..", "imported.json");
+
+    const allLinks = await getJson<ImportItem[]>(allLinksPath);
+
+    const importedLinks = await getJson<string[]>(importedLinksPath);
 
     const notIncluded = items
-        .filter((i) => !alreadyImported.includes(i.link))
+        .filter((i) => !importedLinks.includes(i.link))
         .map((i) => i.link);
 
     await promisify(fs.writeFile)(
-        filePath,
-        JSON.stringify(alreadyImported.concat(notIncluded), null, 4)
+        importedLinksPath,
+        JSON.stringify(importedLinks.concat(notIncluded), null, 4)
     );
 
     console.log(
-        "items added to already imported: ",
-        `${notIncluded.length}/${items.length}`
+        "items already imported: ",
+        `${importedLinks.concat(notIncluded).length}/${allLinks.length}`
     );
 }

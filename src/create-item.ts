@@ -5,10 +5,11 @@ import lodash from "lodash";
 import moment from "moment";
 
 import {
+    addItemsToAllLinks,
     addItemsToAlreadyImportedLinks,
     ImportItem,
 } from "./update-json-files";
-import { getMALItemPageAsObject } from "./fetch-mal-items-pages";
+import { getMALItemPageAsObject } from "./fetch-mal";
 
 export async function createFile(item: ImportItem) {
     const data = await getMALItemPageAsObject(item.link);
@@ -24,7 +25,16 @@ export async function createFile(item: ImportItem) {
 
     markdownLines.push(`## Information`, "");
 
-    const information = ["type", "episodes", "japanese", "aired"];
+    const information = [
+        "type",
+        "episodes",
+        "japanese",
+        "aired",
+        "opening_song",
+        "ending_song",
+        "duration",
+        "rating",
+    ];
 
     information.forEach((key) => {
         if (data[key] && key === "japanese") {
@@ -52,11 +62,31 @@ export async function createFile(item: ImportItem) {
         }
 
         if (data[key]) {
-            markdownLines.push(`-   **${key}:** ${data[key]}`);
+            markdownLines.push(
+                `-   **${lodash.kebabCase(key)}:** ${data[key]}`
+            );
         }
     });
 
     markdownLines.push("", `## Alternative names`, "");
+
+    if (data.synonyms) {
+        data.synonyms.split(",").forEach((name: string) => {
+            markdownLines.push(`-   ${name.replace(/^\s+|\s+$/g, "")}`);
+        });
+
+        markdownLines.push("");
+    }
+
+    markdownLines.push(`## Producers`, "");
+
+    if (data.producers) {
+        data.producers.split(",").forEach((producer: string) => {
+            markdownLines.push(`-   ${producer.replace(/^\s+|\s+$/g, "")}`);
+        });
+
+        markdownLines.push("");
+    }
 
     markdownLines.push(`## Studios`, "");
 
@@ -64,15 +94,11 @@ export async function createFile(item: ImportItem) {
         data.studios.split(",").forEach((studio: string) => {
             markdownLines.push(`-   ${studio.replace(/^\s+|\s+$/g, "")}`);
         });
+
+        markdownLines.push("");
     }
 
-    markdownLines.push("", `## Genres`, "");
-
-    if (data.studios) {
-        data.studios.split(",").forEach((studio: string) => {
-            markdownLines.push(`-   ${studio.replace(/^\s+|\s+$/g, "")}`);
-        });
-    }
+    markdownLines.push(`## Genres`, "");
 
     if (data.genres) {
         data.genres
@@ -90,9 +116,11 @@ export async function createFile(item: ImportItem) {
             .forEach((genre: string) => {
                 markdownLines.push(`-   ${genre}`);
             });
+
+        markdownLines.push("");
     }
 
-    markdownLines.push("", `## Links`, "");
+    markdownLines.push(`## Links`, "");
 
     markdownLines.push(`-   [My anime list](${item.link})`);
 
@@ -102,7 +130,39 @@ export async function createFile(item: ImportItem) {
         });
     }
 
+    markdownLines.push("");
+
+    markdownLines.push(`## Sinopse`, "");
+
+    if (data.sinopse) {
+        markdownLines.push(data.sinopse);
+
+        markdownLines.push("");
+    }
+
+    markdownLines.push(`## Voice actors`, "");
+
+    if (data.characters) {
+        data.characters.forEach((char: any) => {
+            markdownLines.push(`-   **${char.name}:** ${char.voice_actor}`);
+        });
+
+        markdownLines.push("");
+    }
+
+    markdownLines.push(`## Staff`, "");
+
+    if (data.staff) {
+        data.staff.forEach((person: any) => {
+            markdownLines.push(`-   **${person.name}:** ${person.role}`);
+        });
+
+        markdownLines.push("");
+    }
+
     await promisify(fs.writeFile)(filename, markdownLines.join(" \n"));
 
     await addItemsToAlreadyImportedLinks([item]);
+
+    await addItemsToAllLinks(data.related);
 }
