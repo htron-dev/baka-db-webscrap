@@ -2,7 +2,6 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 import lodash from "lodash";
-import { v4 as uuid } from "uuid";
 
 import {
     addItemsToAllLinks,
