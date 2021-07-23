@@ -199,8 +199,6 @@ export async function createProjectFiles(url: string) {
 
     const created = allFiles.map((f) => f.url);
 
-    console.log("created files: ", created.length);
-
     await promisify(fs.writeFile)(
         alreadyCreatedFilesPath,
         JSON.stringify(alreadyCreated.concat(created), null, 4)

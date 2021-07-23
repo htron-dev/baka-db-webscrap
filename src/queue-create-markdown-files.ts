@@ -3,12 +3,14 @@ import Queue from "bull";
 import path from "path";
 
 import imported from "../imported.json";
+import importedCreated from "../files-created.json";
 
 import { createBullBoard } from "@bull-board/api";
 import { BullAdapter } from "@bull-board/api/bullAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 
 import { createProjectFiles } from "./create-markdown-files";
+import { getJson } from "./update-json-files";
 
 const queue = new Queue("create-markdown-files");
 
@@ -19,7 +21,23 @@ queue.process(async (job, done) => {
     try {
         const item = job.data;
 
+        const alreadyCreatedFilesPath = path.resolve(
+            __dirname,
+            "..",
+            "files-created.json"
+        );
+
+        const alreadyCreated: string[] = await getJson(alreadyCreatedFilesPath);
+
+        if (alreadyCreated.includes(item.url)) {
+            return done();
+        }
+
         await createProjectFiles(item.url);
+
+        console.log(
+            `current progress : ${alreadyCreated.length}/${imported.length} `
+        );
 
         setTimeout(done, 5000);
     } catch (error) {
@@ -28,11 +46,13 @@ queue.process(async (job, done) => {
     }
 });
 
-imported.forEach((url) =>
-    queue.add({
-        url,
-    })
-);
+imported
+    .filter((url) => !importedCreated.includes(url))
+    .forEach((url) =>
+        queue.add({
+            url,
+        })
+    );
 
 const serverAdapter = new ExpressAdapter();
 

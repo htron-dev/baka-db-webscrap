@@ -14,13 +14,17 @@ async function main() {
 
     const malLinks = malLinksFile.split("\n");
 
+    const allItems: any = [];
+
     await Promise.all(
         malLinks.map(async (link) => {
             const items = await getItemsFromMALPage(link);
 
-            await addItemsToAllLinks(items);
+            allItems.push(...items);
         })
     );
+
+    await addItemsToAllLinks(allItems);
 
     await promisify(fs.writeFile)(
         path.resolve(__dirname, "..", "mal-links.txt"),
