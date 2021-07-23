@@ -10,13 +10,18 @@ async function main() {
     queue.clean(0);
 
     queue.process("create-file", async (job, done) => {
-        const item = job.data;
+        try {
+            const item = job.data;
 
-        console.log(`importing: ${item.name}`);
+            console.log(`importing: ${item.name}`);
 
-        await mal.importItem(item);
+            await mal.importItem(item);
 
-        done();
+            done();
+        } catch (error) {
+            console.error(error);
+            done(error);
+        }
     });
 
     queue.process("fill-queue", async (job, done) => {
