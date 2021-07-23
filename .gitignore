@@ -1,5 +1,8 @@
 node_modules
-dist/*
 
-files/*
-!files/.gitkeep
+converted
+imported
+
+*.imported.json
+*.converted.json
+*.register.txt

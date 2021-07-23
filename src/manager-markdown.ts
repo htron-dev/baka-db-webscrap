@@ -1,4 +1,9 @@
+import fs from "fs";
+import path from "path";
+import { promisify } from "util";
+
 import lodash from "lodash";
+import { getJSON, updateJSON } from "./manager-json";
 
 export interface ItemMarkdown {
     [prop: string]: any;
@@ -23,6 +28,63 @@ export interface ItemMarkdown {
         name: string;
         voice_actor: string;
     }[];
+}
+
+export async function createImporterMarkdownManger(name: string) {
+    const basePath = path.resolve(__dirname, "..");
+    const convertedPath = path.resolve(
+        basePath,
+        `${name}-links.converted.json`
+    );
+
+    const convertedExist = await promisify(fs.exists)(convertedPath);
+
+    if (!convertedExist) {
+        await updateJSON(convertedPath, []);
+    }
+
+    function getConverted() {
+        return getJSON<string[]>(convertedPath);
+    }
+
+    async function addConverted(urls: string[]) {
+        const converted = await getConverted();
+
+        const notIncluded = urls.filter((url) => !converted.includes(url));
+
+        await updateJSON(convertedPath, converted.concat(notIncluded));
+    }
+
+    async function createMarkdown(
+        projectName: string,
+        itemName: string,
+        content: ItemMarkdown
+    ) {
+        const fullPath = path.resolve(
+            basePath,
+            "converted",
+            lodash.kebabCase(projectName),
+            `en-US_${lodash.kebabCase(itemName)}.md`
+        );
+
+        const filter = {
+            types: ["tv-serie"],
+        };
+
+        if (!filter.types.includes(content.type)) {
+            return;
+        }
+
+        await promisify(fs.mkdir)(path.dirname(fullPath), { recursive: true });
+
+        await promisify(fs.writeFile)(fullPath, getMarkdownText(content));
+    }
+
+    return {
+        getConverted,
+        addConverted,
+        createMarkdown,
+    };
 }
 
 export function getMarkdownText(item: ItemMarkdown) {

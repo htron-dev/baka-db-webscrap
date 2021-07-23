@@ -23,8 +23,9 @@
     },
     "scripts": {
         "import": "ts-node src/index.ts",
-        "create-markdown-files": "ts-node src/queue-create-markdown-files.ts",
-        "register": "ts-node src/register-items-page.ts",
+        "importer": "ts-node src/run-importer",
+        "conversor": "ts-node src/run-conversor.ts",
+        "register": "ts-node src/register-mal.ts",
         "test": "ts-node test/index.ts"
     },
     "keywords": [],
