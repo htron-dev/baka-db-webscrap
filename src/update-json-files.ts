@@ -6,7 +6,7 @@ export interface ImportItem {
     link: string;
     name: string;
 }
-async function getJson<T = {}>(filename: string): Promise<T> {
+export async function getJson<T = {}>(filename: string): Promise<T> {
     const content = await promisify(fs.readFile)(filename, "utf-8");
 
     return JSON.parse(content);

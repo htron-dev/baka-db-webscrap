@@ -10,7 +10,7 @@ import { getMALItemPageAsObject } from "../src/fetch-mal";
 
 createFile({
     name: "Teste",
-    link: "https://myanimelist.net/anime/33419/12-sai__Chicchana_Mune_no_Tokimeki_2nd_Season",
+    link: "https://myanimelist.net/anime/46471/Tantei_wa_Mou_Shindeiru",
 })
     .then(console.log)
     .catch((err) => {

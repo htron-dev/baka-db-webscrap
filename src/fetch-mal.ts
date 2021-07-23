@@ -42,21 +42,27 @@ export async function getMALItemPageAsObject(link: string) {
         }
     );
 
-    anime["sinopse"] = await page.$eval("[itemprop=description]", (el) => {
-        return el.textContent;
+    anime["sinopse"] = await page.$eval("body", (body) => {
+        const el = body.querySelector("[itemprop=description]");
+        return el ? el.textContent : "";
     });
 
-    anime["opening_song"] = await page.$eval(".theme-songs.opnening", (el) => {
-        const name = el.querySelector(".theme-song");
+    anime["opening_song"] = await page.$eval("body", (el) => {
+        const name = el.querySelector(".theme-songs.opnening .theme-song");
         return name ? name.textContent : null;
     });
 
-    anime["ending_song"] = await page.$eval(".theme-songs.ending", (el) => {
-        const name = el.querySelector(".theme-song");
+    anime["ending_song"] = await page.$eval("body", (el) => {
+        const name = el.querySelector(".theme-songs.ending .theme-song");
         return name ? name.textContent : null;
     });
 
-    anime["characters"] = await page.$eval(".detail-characters-list", (el) => {
+    anime["characters"] = await page.$eval("body", (body) => {
+        const el = body.querySelector(".detail-characters-list");
+
+        if (!el) {
+            return [];
+        }
         return Array.from(el.querySelectorAll("tr"))
             .map((tr) => {
                 const character = tr.querySelector("h3");
@@ -69,7 +75,9 @@ export async function getMALItemPageAsObject(link: string) {
             .filter((i) => !!i.name);
     });
 
-    anime["staff"] = await page.$$eval(".detail-characters-list", (all) => {
+    anime["staff"] = await page.$eval("body", (body) => {
+        const all = body.querySelectorAll(".detail-characters-list");
+
         const el = all[1];
 
         if (!el) {
@@ -125,6 +133,12 @@ export async function getMALItemPageAsObject(link: string) {
         "rating",
         "links",
         "synonyms",
+        "volumes",
+        "chapters",
+        "published",
+        "authors",
+        "serialization",
+        "status",
     ];
 
     elements.forEach((el) => {
