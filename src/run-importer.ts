@@ -20,7 +20,6 @@ async function main() {
         queue.add("create-file", item, {
             attempts: 2,
             backoff: 60 * 1000,
-            removeOnFail: true,
             removeOnComplete: true,
         })
     );
@@ -29,13 +28,13 @@ async function main() {
         try {
             const item = job.data;
 
-            console.log(
-                `importing: ${item.name} | progress: ${alreadyImported.length}/${allLinks.length}`
-            );
-
             await mal.importItem(item);
 
             alreadyImported = await mal.getImported();
+
+            console.log(
+                `imported: ${item.name} | progress: ${alreadyImported.length}/${allLinks.length}`
+            );
 
             done();
         } catch (error) {

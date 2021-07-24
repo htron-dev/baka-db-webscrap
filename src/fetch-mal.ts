@@ -22,10 +22,24 @@ export async function getItemsFromMALPage(link: string) {
 
     return animes.filter((a) => a.name !== "");
 }
-
 export async function getMALItemPageAsObject(link: string) {
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+
+    try {
+        const page = await browser.newPage();
+
+        const item = await convertPageToAnime(page, link);
+
+        await browser.close();
+
+        return item;
+    } catch (error) {
+        await browser.close();
+        throw new Error(error);
+    }
+}
+
+async function convertPageToAnime(page: puppeteer.Page, link: string) {
     const anime: any = {};
 
     await page.goto(link, {
@@ -162,8 +176,6 @@ export async function getMALItemPageAsObject(link: string) {
             anime[key] = value.replace(/^\s+|\s+$/g, "").replace(/\n/g, "");
         }
     });
-
-    await browser.close();
 
     return anime;
 }
