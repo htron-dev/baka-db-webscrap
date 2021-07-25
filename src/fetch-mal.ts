@@ -3,24 +3,29 @@ import puppeteer from "puppeteer";
 // fetch all animes in a page
 export async function getItemsFromMALPage(link: string) {
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    try {
+        const page = await browser.newPage();
 
-    await page.goto(link);
+        await page.goto(link);
 
-    const animes = await page.$$eval("table tr", (items) =>
-        items.map((item) => {
-            const nameElement = item.querySelector("strong");
-            const linkElement = item.querySelector("a");
-            return {
-                name: nameElement ? nameElement.innerHTML : "",
-                link: linkElement ? linkElement.href : "",
-            };
-        })
-    );
+        const animes = await page.$$eval("table tr", (items) =>
+            items.map((item) => {
+                const nameElement = item.querySelector("strong");
+                const linkElement = item.querySelector("a");
+                return {
+                    name: nameElement ? nameElement.innerHTML : "",
+                    link: linkElement ? linkElement.href : "",
+                };
+            })
+        );
 
-    await browser.close();
+        await browser.close();
 
-    return animes.filter((a) => a.name !== "");
+        return animes.filter((a) => a.name !== "");
+    } catch (error) {
+        await browser.close();
+        throw new Error(error);
+    }
 }
 export async function getMALItemPageAsObject(link: string) {
     const browser = await puppeteer.launch();

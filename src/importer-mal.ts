@@ -1,7 +1,7 @@
 import moment from "moment";
 import lodash from "lodash";
 
-import { getMALItemPageAsObject } from "./fetch-mal";
+import { getMALItemPageAsObject, getItemsFromMALPage } from "./fetch-mal";
 import { createImporterJsonManger, ImportItem } from "./manager-json";
 import { createImporterMarkdownManger } from "./manager-markdown";
 
@@ -19,6 +19,20 @@ export async function getMalManager() {
         await jsonManager.addImportedItems([item]);
 
         await jsonManager.addItems(data.related);
+    }
+
+    async function importListItems(links: string[]) {
+        const allItems: any = [];
+
+        await Promise.all(
+            links.map(async (link) => {
+                const items = await getItemsFromMALPage(link);
+
+                allItems.push(...items);
+            })
+        );
+
+        await jsonManager.addItems(allItems, true);
     }
 
     async function convertItem(url: string) {
@@ -157,6 +171,7 @@ export async function getMalManager() {
     return {
         ...jsonManager,
         ...markdownManger,
+        importListItems,
         importItem,
         convertItem,
     };
